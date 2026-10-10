@@ -1,0 +1,20 @@
+
+# Python environment and cache
+.venv/
+__pycache__/
+*.py[cod]
+.idea/
+
+# Environment secrets
+.env
+.env.*
+
+# Generated training artifacts
+artifacts/
+
+# Keep the model registry locally for now
+registry/
+
+# Editor and OS files
+.vscode/
+.DS_Store

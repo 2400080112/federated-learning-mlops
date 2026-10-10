@@ -1,0 +1,9 @@
+
+services:
+  app:
+    build: .
+    image: federated-mlops:latest
+    volumes:
+      - ./registry:/app/registry
+      - ./artifacts:/app/artifacts
+    command: ["python", "main.py", "--help"]

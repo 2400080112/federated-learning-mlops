@@ -1,0 +1,9 @@
+{
+  "random_seed": 42,
+  "test_size": 0.2,
+  "num_clients": 5,
+  "rounds": 8,
+  "local_epochs": 3,
+  "learning_rate": 0.05,
+  "l2_strength": 0.0001
+}
