@@ -1,3 +1,4 @@
+
 {
   "random_seed": 42,
   "test_size": 0.2,
@@ -5,5 +6,8 @@
   "rounds": 8,
   "local_epochs": 3,
   "learning_rate": 0.05,
-  "l2_strength": 0.0001
+  "l2_strength": 0.0001,
+  "differential_privacy": false,
+  "clipping_norm": 1.0,
+  "noise_multiplier": 1.0
 }
