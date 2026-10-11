@@ -1,5 +1,5 @@
 
-name: Python Tests
+name: Python Tests and Docker
 
 on:
   push:
@@ -26,5 +26,11 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Run tests
+      - name: Run Python tests
         run: python -m pytest -v
+
+      - name: Build Docker image
+        run: docker build -t federated-mlops:ci .
+
+      - name: Run tests inside Docker
+        run: docker run --rm federated-mlops:ci python -m pytest -v
