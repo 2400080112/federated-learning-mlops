@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import json
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -118,8 +119,11 @@ def predict(
         )
 
     PREDICTION_DIR.mkdir(parents=True, exist_ok=True)
+    # second-resolution timestamps collide: two scoring jobs in the same second
+    # used to overwrite each other's CSV, so both download links served the
+    # same file. The random suffix makes the filename unique per job.
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    out_path = PREDICTION_DIR / f"predictions-{stamp}.csv"
+    out_path = PREDICTION_DIR / f"predictions-{stamp}-{uuid.uuid4().hex[:6]}.csv"
     out.to_csv(out_path, index=False)
 
     preview_cols = [c for c in ("sample_id", "target", "prediction_label", "p_benign") if c in out.columns]

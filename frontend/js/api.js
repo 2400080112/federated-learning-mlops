@@ -68,12 +68,12 @@ export const api = {
   deleteVersion: (id) => request(`/api/models/${id}`, { method: "DELETE" }),
 
   predict: (payload) => request("/api/predict", { method: "POST", body: payload }),
-  predictUpload: ({ file, threshold, stage, modelVersionId }) => {
+  predictUpload: ({ file, threshold, stage, model_version_id }) => {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("threshold", String(threshold));
-    fd.append("stage", stage || "production");
-    if (modelVersionId) fd.append("model_version_id", String(modelVersionId));
+    if (stage) fd.append("stage", stage);
+    if (model_version_id) fd.append("model_version_id", String(model_version_id));
     return request("/api/predict/upload", { method: "POST", formData: fd });
   },
   listPredictions: (limit = 10) => request(`/api/predictions?limit=${limit}`),

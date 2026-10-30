@@ -29,7 +29,7 @@ def create_run(
     progress (the ``history`` array grows one entry per round).
     """
     run = training.create_run(db, payload)
-    training.start_training(request.app.state.session_factory, run.id)
+    training.start_training(request.app.state.executor, request.app.state.session_factory, run.id)
     return run_to_summary(run)
 
 

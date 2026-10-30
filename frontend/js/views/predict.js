@@ -13,7 +13,7 @@ import {
 
 export async function renderPredict(root) {
   const state = {
-    stage: "production",
+    target: "production",
     threshold: 0.5,
     source: "bundled",
     limit: 569,
@@ -39,12 +39,23 @@ export async function renderPredict(root) {
 
   /* ---------------------------------------------------------- form */
   const versionSelect = el("select", {
-    onchange: (event) => { state.stage = event.target.value; },
+    onchange: (event) => { state.target = event.target.value; },
   },
     el("option", { value: "production" }, "production (what serving reads)"),
     el("option", { value: "staging" }, "staging (latest candidate)"),
-    ...versions.map((v) => el("option", { value: v.stage }, `— pick ${v.name}:${v.version} (${v.stage})`)),
+    ...versions.map((v) => el("option", { value: `version:${v.id}` },
+      `pin ${v.name}:${v.version} (${v.stage}) — ${pct(v.test_accuracy)} test`)),
   );
+
+  // "version:12" pins one exact version; anything else is a stage name, which
+  // the server resolves to the newest version in that stage. Selecting a version
+  // by *stage* used to silently score with whatever was newest instead.
+  function resolveTarget() {
+    if (state.target.startsWith("version:")) {
+      return { model_version_id: Number(state.target.slice("version:".length)) };
+    }
+    return { stage: state.target };
+  }
 
   const thresholdValue = el("span", { class: "val" }, "0.50");
   const thresholdInput = el("input", {
@@ -117,16 +128,17 @@ export async function renderPredict(root) {
     btn.textContent = "Scoring…";
     try {
       let result;
+      const target = resolveTarget();
       if (state.source === "upload") {
         if (!state.file) throw new Error("choose a CSV file first");
         result = await api.predictUpload({
           file: state.file,
           threshold: state.threshold,
-          stage: state.stage.startsWith("—") ? "production" : state.stage,
+          ...target,
         });
       } else {
         result = await api.predict({
-          stage: state.stage.startsWith("—") ? "production" : state.stage,
+          ...target,
           threshold: state.threshold,
           use_bundled_dataset: true,
           limit: state.limit,

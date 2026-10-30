@@ -134,6 +134,20 @@ class ModelVersion(Base):
     run: Mapped[Optional[Run]] = relationship(back_populates="model_versions")
 
 
+class ModelCounter(Base):
+    """Monotonic version counter per model name.
+
+    A version number is an identity, so it must never be handed out twice -- not
+    even after the version holding it is deleted. Deriving the next number from
+    the rows that currently exist cannot guarantee that; a counter can.
+    """
+
+    __tablename__ = "model_counters"
+
+    name: Mapped[str] = mapped_column(String(64), primary_key=True)
+    last_version: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class Prediction(Base):
     __tablename__ = "predictions"
 

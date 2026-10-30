@@ -3,10 +3,22 @@
 from __future__ import annotations
 
 import json
+import math
 from typing import Any, Dict
 
 from ..models import ModelVersion, Run
 from ..schemas import ModelVersionOut, RoundPoint, RunDetail, RunSummary
+
+
+def _finite(value: Any) -> Any:
+    """NaN and inf are not valid JSON, and a browser's JSON.parse rejects them.
+
+    A metric can be undefined rather than bad -- roc_auc on a single-class split,
+    for instance -- so map non-finite floats to None instead of shipping NaN.
+    """
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
 
 
 def _config(run: Run) -> Dict[str, Any]:
@@ -32,10 +44,10 @@ def run_to_summary(run: Run) -> RunSummary:
         partition=cfg.get("partition"),
         privacy_enabled=run.privacy_enabled,
         epsilon=run.epsilon,
-        val_accuracy=run.val_accuracy,
-        test_accuracy=run.test_accuracy,
-        test_f1=run.test_f1,
-        test_roc_auc=run.test_roc_auc,
+        val_accuracy=_finite(run.val_accuracy),
+        test_accuracy=_finite(run.test_accuracy),
+        test_f1=_finite(run.test_f1),
+        test_roc_auc=_finite(run.test_roc_auc),
         is_scored=run.is_scored,
         error=run.error,
     )
@@ -61,12 +73,12 @@ def run_to_detail(run: Run) -> RunDetail:
     test = {}
     if run.test_accuracy is not None:
         test = {
-            "accuracy": run.test_accuracy,
-            "precision": run.test_precision or 0.0,
-            "recall": run.test_recall or 0.0,
-            "f1": run.test_f1 or 0.0,
-            "roc_auc": run.test_roc_auc or 0.0,
-            "log_loss": run.test_log_loss or 0.0,
+            "accuracy": _finite(run.test_accuracy),
+            "precision": _finite(run.test_precision) or 0.0,
+            "recall": _finite(run.test_recall) or 0.0,
+            "f1": _finite(run.test_f1) or 0.0,
+            "roc_auc": _finite(run.test_roc_auc) or 0.0,
+            "log_loss": _finite(run.test_log_loss) or 0.0,
         }
     return RunDetail(
         **base,
@@ -94,9 +106,9 @@ def model_to_out(mv: ModelVersion) -> ModelVersionOut:
         updated_at=mv.updated_at,
         run_id=mv.run_id,
         description=mv.description,
-        test_accuracy=mv.test_accuracy,
-        test_f1=mv.test_f1,
-        test_roc_auc=mv.test_roc_auc,
+        test_accuracy=_finite(mv.test_accuracy),
+        test_f1=_finite(mv.test_f1),
+        test_roc_auc=_finite(mv.test_roc_auc),
         epsilon=mv.epsilon,
         metadata=meta,
     )

@@ -22,7 +22,7 @@ from fedmlops.config import RunConfig
 from fedmlops.data import load_splits
 from fedmlops.model import LogisticRegression
 
-from ..models import ModelVersion, Run
+from ..models import ModelCounter, ModelVersion, Run
 
 
 class ServiceError(Exception):
@@ -87,10 +87,21 @@ def register_run(
     if stage not in {"staging", "production", "archived"}:
         raise ServiceError(f"unknown stage: {stage}")
 
+    # Take the next number from a per-model counter rather than from the rows
+    # that exist right now. Counting broke in two ways: count+1 collided with a
+    # surviving row after an older version was deleted (500 on the unique
+    # constraint), and max+1 re-issued a deleted version's number, so "v2" could
+    # mean two different artifacts over time.
     existing: List[str] = session.scalars(
         select(ModelVersion.version).where(ModelVersion.name == name)
     ).all()
-    version = f"v{len(existing) + 1}"
+    counter = session.get(ModelCounter, name)
+    if counter is None:
+        used = {int(v[1:]) for v in existing if v.startswith("v") and v[1:].isdigit()}
+        counter = ModelCounter(name=name, last_version=max(used, default=0))
+        session.add(counter)
+    counter.last_version += 1
+    version = f"v{counter.last_version}"
 
     metadata = {
         "source_run": run.id,

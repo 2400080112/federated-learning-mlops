@@ -268,7 +268,7 @@ function watchRun(runId, host) {
   const paint = () => {
     if (!run) return;
     clear(host);
-    host.append(liveCard(run));
+    host.append(liveCard(run, host));
   };
 
   const tick = async () => {
@@ -290,7 +290,7 @@ function watchRun(runId, host) {
   poller = setInterval(tick, 700);
 }
 
-function liveCard(run) {
+function liveCard(run, host) {
   const rounds = run.config?.federated?.rounds || 0;
   const done = run.history?.length || 0;
   const running = run.status === "queued" || run.status === "running";
@@ -301,7 +301,12 @@ function liveCard(run) {
         run.privacy_enabled ? badge(`ε ${num(run.epsilon, 2)}`, "dp") : null),
       el("div", { class: "small dim mono mt-8" }, run.id),
     ),
-    el("button", { class: "btn btn-sm", onclick: () => openRunDrawer(run.id, { onChange: () => watchRun(run.id, document.querySelector("#main")) }) }, "Open"),
+    el("button", {
+      class: "btn btn-sm",
+      // refresh the live panel, not the whole page: this callback used to repaint
+      // into #main and wipe the form
+      onclick: () => openRunDrawer(run.id, { onChange: () => watchRun(run.id, host) }),
+    }, "Open"),
   );
 
   const body = el("div", { class: "card-body" },

@@ -25,9 +25,16 @@ from fedmlops.trainer import RoundRecord, train_federated
 from ..models import RoundMetric, Run
 from ..schemas import RunCreate
 
-# Two workers: enough to show concurrent runs, few enough that SQLite and the
-# CPU stay honest. A real deployment would hand this to a task queue.
-EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="fl-train")
+# The pool belongs to the application instance, not to this module: a shared
+# global pool leaked work between app instances (and between tests), so one
+# app's queued runs could starve another's. See create_app().
+MAX_WORKERS = 2
+
+
+def make_executor() -> ThreadPoolExecutor:
+    """Two workers: enough to show concurrent runs, few enough that SQLite and
+    the CPU stay honest. A real deployment would hand this to a task queue."""
+    return ThreadPoolExecutor(max_workers=MAX_WORKERS, thread_name_prefix="fl-train")
 
 
 def new_run_id() -> str:
@@ -94,9 +101,11 @@ def _default_name(payload: RunCreate) -> str:
     return f"{tag} · {payload.n_clients}c · {payload.rounds}r"
 
 
-def start_training(session_factory: sessionmaker[Session], run_id: str) -> None:
-    """Queue a run on the worker pool (what the HTTP endpoint does)."""
-    EXECUTOR.submit(run_training, session_factory, run_id)
+def start_training(
+    executor: ThreadPoolExecutor, session_factory: sessionmaker[Session], run_id: str
+) -> None:
+    """Queue a run on this application's worker pool (what the HTTP endpoint does)."""
+    executor.submit(run_training, session_factory, run_id)
 
 
 def run_training(

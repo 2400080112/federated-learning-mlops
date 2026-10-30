@@ -10,6 +10,7 @@ whole product on one port -- no separate dev server, no CORS setup.
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -20,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from .db import PROJECT_ROOT, init_db, make_engine, make_session_factory
 from .routers import meta, models, predict, runs
 from .services.registry_service import ServiceError
+from .services.training import make_executor
 
 __version__ = "1.0.0"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -29,6 +31,14 @@ def create_app(database_url: str | None = None) -> FastAPI:
     engine = make_engine(database_url)
     session_factory = make_session_factory(engine)
     init_db(engine)
+    executor = make_executor()
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        yield
+        # drop queued work and let running rounds finish their own writes; the
+        # pool is per-app so this cannot affect another instance
+        executor.shutdown(wait=False, cancel_futures=True)
 
     app = FastAPI(
         title="Federated Learning MLOps API",
@@ -40,9 +50,11 @@ def create_app(database_url: str | None = None) -> FastAPI:
         ),
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
+        lifespan=lifespan,
     )
     app.state.engine = engine
     app.state.session_factory = session_factory
+    app.state.executor = executor
 
     # The frontend is served from the same origin, so CORS is only for people
     # running a separate dev server against this API.

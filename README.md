@@ -169,6 +169,7 @@ persistence, orchestration and the API.
 | `runs` | one row per experiment: status, config JSON, best-round metrics, test metrics, DP settings | the experiment log; status is the progress channel |
 | `round_metrics` | one row per round per run | makes the training curve queryable instead of a blob |
 | `model_versions` | immutable artifact + stage, unique on `(name, version)` | promotion is an UPDATE, rollback is another UPDATE |
+| `model_counters` | last version number issued per model name | version numbers are identity: they must never be reused, even after a delete |
 | `predictions` | each scoring job, its summary, preview and CSV path | an audit trail of what was served |
 
 ## API
@@ -233,15 +234,21 @@ container restarts; a `seed` profile populates three example runs.
 ## Tests
 
 ```bash
-python -m pytest -q        # 37 tests, ~7 s
+python -m pytest -q        # 46 tests, ~13 s
 ```
 
 They cover the API contract (validation rejections, lifecycle rules, 404/409
 paths), the registry invariants (cannot register unscored, gate blocks a weak
 model, promoting archives the previous holder, rollback), prediction paths
-(bundled, upload, download, bad input), and the federated core itself (FedAvg is
-a weighted mean, partitions cover every row, clipping bounds the norm, ε and σ
-round-trip, the trainer improves and reports every round).
+(bundled, upload, download, bad input), the terminal CLI, and the federated core
+itself (FedAvg is a weighted mean, partitions cover every row, clipping bounds
+the norm, ε and σ round-trip, the trainer improves and reports every round).
+
+`tests/test_regressions.py` holds the bugs found by auditing rather than by
+writing features — version numbers reused after a delete, two scoring jobs
+overwriting each other's CSV in the same second, and a chosen model version
+silently resolving to the newest one in its stage. Each test failed before its
+fix.
 
 ## What is deliberately simple
 
