@@ -1,3 +1,15 @@
-
-numpy>=1.24,<3
-opacus==1.6.0
+# Runtime dependencies.
+#
+# Lower bounds rather than exact pins, so a fresh machine resolves to whatever
+# is current. This project was verified with:
+#   fastapi 0.162.0 · uvicorn 0.54.0 · SQLAlchemy 2.1.6 · pydantic 2.14.2
+#   python-multipart 0.0.20 · numpy 2.5.4 · pandas 3.0.6 · PyYAML 6.0.3
+# on Python 3.12. Nothing here uses framework APIs newer than the bounds below.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+SQLAlchemy>=2.0
+pydantic>=2.7
+python-multipart>=0.0.9
+numpy>=1.26
+pandas>=2.2
+PyYAML>=6.0

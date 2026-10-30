@@ -1,14 +1,15 @@
-
-name: Python Tests and Docker
+name: Tests
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
+    name: pytest (Python 3.12)
     runs-on: ubuntu-latest
 
     steps:
@@ -18,19 +19,47 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
+          pip install -r requirements.txt -r requirements-dev.txt
 
-      - name: Run Python tests
-        run: python -m pytest -v
+      - name: Run the test suite
+        run: python -m pytest -q
 
-      - name: Build Docker image
-        run: docker build -t federated-mlops:ci .
+      - name: Smoke the CLI end to end
+        working-directory: backend
+        run: |
+          python -m app.cli train --clients 4 --rounds 3 --name ci-smoke
+          RID=$(python -m app.cli list-runs --limit 1 | tail -1 | awk '{print $1}')
+          python -m app.cli evaluate --run "$RID"
+          python -m app.cli register --run "$RID"
+          python -m app.cli predict --limit 10
 
-      - name: Run tests inside Docker
-        run: docker run --rm federated-mlops:ci python -m pytest -v
+  docker:
+    name: Docker build + health check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build the image
+        run: docker build -t federated-learning-mlops:ci .
+
+      - name: Run the tests inside the image
+        run: docker run --rm -w /app federated-learning-mlops:ci python -m pytest -q
+
+      - name: Start the app and hit the API
+        run: |
+          docker run -d --name flci -p 8000:8000 federated-learning-mlops:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/api/health; then break; fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:8000/api/stats
+          curl -fsS -o /dev/null -w "index.html -> %{http_code}\n" http://127.0.0.1:8000/
+          docker rm -f flci

@@ -1,0 +1,93 @@
+# Sample requests for the REST Client extension (humao.rest-client).
+# Open this file, click "Send Request" above any block.
+
+@host = http://127.0.0.1:8000
+
+### health
+GET {{host}}/api/health
+
+### dashboard stats
+GET {{host}}/api/stats
+
+### start a federated run (8 clients, IID, 25 rounds)
+# @name createRun
+POST {{host}}/api/runs
+Content-Type: application/json
+
+{
+  "name": "from api.http",
+  "n_clients": 8,
+  "rounds": 25,
+  "partition": "iid",
+  "seed": 7
+}
+
+### a non-IID run
+POST {{host}}/api/runs
+Content-Type: application/json
+
+{
+  "name": "skewed clients",
+  "n_clients": 10,
+  "rounds": 30,
+  "partition": "dirichlet",
+  "dirichlet_alpha": 0.2
+}
+
+### a run with differential privacy
+POST {{host}}/api/runs
+Content-Type: application/json
+
+{
+  "name": "DP epsilon 8",
+  "n_clients": 10,
+  "rounds": 20,
+  "privacy_enabled": true,
+  "dp_epsilon": 8.0,
+  "dp_clip": 1.0
+}
+
+### poll a run (paste an id)
+GET {{host}}/api/runs/{{createRun.response.body.$.id}}
+
+### list finished runs
+GET {{host}}/api/runs?status=finished
+
+### score it on the test split
+POST {{host}}/api/runs/{{createRun.response.body.$.id}}/evaluate
+
+### register it as a staging version
+POST {{host}}/api/runs/{{createRun.response.body.$.id}}/register
+Content-Type: application/json
+
+{ "stage": "staging", "description": "from api.http" }
+
+### list registry versions
+GET {{host}}/api/models
+
+### promote version 1 to production (fails if test accuracy < 0.9)
+POST {{host}}/api/models/1/promote
+Content-Type: application/json
+
+{ "stage": "production", "min_accuracy": 0.9 }
+
+### the serving version
+GET {{host}}/api/models/production
+
+### score the bundled dataset
+POST {{host}}/api/predict
+Content-Type: application/json
+
+{ "stage": "production", "threshold": 0.5, "use_bundled_dataset": true, "limit": 100 }
+
+### validation error example (fewer than 2 clients -> 422)
+POST {{host}}/api/runs
+Content-Type: application/json
+
+{ "n_clients": 1 }
+
+### registering an unscored run -> 409
+POST {{host}}/api/runs/{{createRun.response.body.$.id}}/register
+Content-Type: application/json
+
+{}
