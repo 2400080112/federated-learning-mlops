@@ -18,4 +18,7 @@ data/predictions/
 # screenshots are for the README, not the runtime image
 docs/screenshots/
 
+# generated static site for Netlify
+netlify/
+
 *.zip

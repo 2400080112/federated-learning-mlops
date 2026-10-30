@@ -1,0 +1,36 @@
+# Netlify configuration.
+#
+# The site is pre-built and committed under netlify/site (run
+# `python scripts/build_netlify.py` to regenerate it), so there is no build
+# command here -- Netlify just publishes the directory. That keeps the deploy
+# independent of whatever Python the build image happens to ship.
+
+[build]
+  publish = "netlify/site"
+
+[build.environment]
+  PYTHON_VERSION = "3.12"
+
+# Hash routing means no SPA rewrite is required, but this keeps a stray deep link
+# (or a typo) landing on the app rather than Netlify's 404 page.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/demo.json"
+  [headers.values]
+    Cache-Control = "public, max-age=300"

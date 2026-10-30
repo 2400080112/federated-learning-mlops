@@ -83,6 +83,19 @@ async function checkHealth() {
 }
 
 hydrateIcons();
+
+// The static build replays a snapshot; say so instead of letting writes fail
+// mysteriously when someone clicks "Register".
+if (api.isDemo) {
+  const foot = document.querySelector(".sidebar-foot");
+  if (foot) {
+    foot.insertBefore(
+      el("div", { class: "demo-flag" }, "Read-only demo · static build"),
+      foot.firstChild,
+    );
+  }
+}
+
 window.addEventListener("hashchange", navigate);
 if (!window.location.hash) window.location.hash = "#/dashboard";
 navigate();

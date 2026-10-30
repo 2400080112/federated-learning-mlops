@@ -180,7 +180,9 @@ function paintResult(host, result) {
           el("span", { class: "small dim" }, result.source_label)),
         el("div", { class: "small dim mt-8" }, `created ${when(result.created_at)}`),
       ),
-      el("a", { class: "btn btn-sm btn-primary", href: result.download_url, download: "" }, "Download CSV"),
+      result.download_url
+        ? el("a", { class: "btn btn-sm btn-primary", href: result.download_url, download: "" }, "Download CSV")
+        : el("span", { class: "small dim" }, "in-browser demo — no CSV"),
     ),
     el("div", { class: "card-body" }, tiles),
   ];

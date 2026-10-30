@@ -1,9 +1,20 @@
 /**
  * API client. One place that knows the URLs and how errors surface, so views
  * only deal with data or a thrown Error with a readable message.
+ *
+ * Two runtime modes, chosen by `window.FEDFLOPS_CONFIG` (injected by the build):
+ *
+ *   { apiBase: "https://api.example.com" }  live API, possibly cross-origin
+ *   { demo: true }                          static snapshot, in-browser model
+ *
+ * The default (no config) is same-origin, which is how `uvicorn app.main:app`
+ * serves it locally.
  */
 
-const BASE = "";
+import { createDemoApi } from "./demo.js";
+
+const CONFIG = (typeof window !== "undefined" && window.FEDFLOPS_CONFIG) || {};
+const BASE = (CONFIG.apiBase || "").replace(/\/$/, "");
 
 async function request(path, { method = "GET", body, formData = null } = {}) {
   const options = { method, headers: {} };
@@ -40,7 +51,9 @@ async function request(path, { method = "GET", body, formData = null } = {}) {
   return payload;
 }
 
-export const api = {
+const liveApi = {
+  isDemo: false,
+
   health: () => request("/api/health"),
   stats: () => request("/api/stats"),
   datasetPreview: (limit = 10) => request(`/api/dataset/preview?limit=${limit}`),
@@ -78,3 +91,6 @@ export const api = {
   },
   listPredictions: (limit = 10) => request(`/api/predictions?limit=${limit}`),
 };
+
+/** Demo mode swaps in a snapshot-backed client with the same surface. */
+export const api = CONFIG.demo ? createDemoApi(`${BASE}/demo.json`) : liveApi;

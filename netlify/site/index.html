@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FedMLOps · Federated Learning console</title>
+  <meta name="description" content="Federated learning with a small MLOps workflow: train across simulated clients, track runs, register and promote models, serve predictions." />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif'>F</text></svg>" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">FL</div>
+        <div class="brand-text">
+          <strong>FedMLOps</strong>
+          <span>privacy-preserving ML</span>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <div class="nav-label">Workflow</div>
+        <a class="nav-item" href="#/dashboard" data-route="dashboard">
+          <span class="nav-icon" data-icon="dashboard"></span> Dashboard
+        </a>
+        <a class="nav-item" href="#/train" data-route="train">
+          <span class="nav-icon" data-icon="train"></span> Train
+        </a>
+        <a class="nav-item" href="#/runs" data-route="runs">
+          <span class="nav-icon" data-icon="runs"></span> Runs
+        </a>
+        <div class="nav-label">Deploy</div>
+        <a class="nav-item" href="#/registry" data-route="registry">
+          <span class="nav-icon" data-icon="registry"></span> Registry
+        </a>
+        <a class="nav-item" href="#/predict" data-route="predict">
+          <span class="nav-icon" data-icon="predict"></span> Predict
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="health">
+          <span class="dot" id="health-dot"></span>
+          <span id="health-text">checking API…</span>
+        </div>
+        <div>WDBC · 569 rows · 30 features</div>
+        <div><a href="/api/docs" target="_blank" rel="noopener" style="color:#a5b4fc">API docs</a></div>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="empty">Loading…</div>
+    </main>
+  </div>
+
+  <script>window.FEDFLOPS_CONFIG = {"demo": true, "apiBase": ""};</script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

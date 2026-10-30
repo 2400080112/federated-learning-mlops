@@ -219,6 +219,28 @@ Test split of 113 rows:
 The interesting column is the last one: privacy costs measurable accuracy, and
 the app lets you move ε and watch the curve move.
 
+## Deploying
+
+**Netlify cannot run this backend** — no Python runtime for a long-lived FastAPI
+process, no writable disk for SQLite, nowhere for a background training thread.
+Two supported shapes, both in [docs/DEPLOY_NETLIFY.md](docs/DEPLOY_NETLIFY.md):
+
+```bash
+# A. static snapshot: real runs exported to JSON, model runs in the browser
+python scripts/build_netlify.py
+npx netlify deploy --prod --dir netlify/site     # or drag netlify/site onto app.netlify.com/drop
+
+# B. static frontend on Netlify + the API on a Python host (Render/Railway/Fly)
+python scripts/build_netlify.py --api-base https://your-api.example.com
+npx netlify deploy --prod --dir netlify/site
+```
+
+In shape A the dashboard, runs, registry and predictions are real exported data,
+and **Predict runs the model in the browser** — the threshold slider genuinely
+changes the confusion matrix. Training, promotion and uploads are disabled with
+an explanation, and the sidebar carries a "Read-only demo · static build" flag.
+`netlify/site/` is generated output: edit `frontend/` and rebuild.
+
 ## CI and Docker
 
 `.github/workflows/tests.yml` runs on every push: `pytest` on Python 3.12, a CLI

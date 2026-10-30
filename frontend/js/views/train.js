@@ -53,6 +53,17 @@ export async function renderTrain(root) {
     liveHost,
   ));
 
+  if (api.isDemo) {
+    const submitBtn = form.node.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Training needs the live API";
+    }
+    form.node.append(el("div", { class: "note warn" },
+      "This build is a static snapshot of a seeded run, so the form is read-only. " +
+      "Run the FastAPI backend locally, or point the site at a live API — see docs/DEPLOY_NETLIFY.md."));
+  }
+
   form.onSubmit(async (payload, button) => {
     button.disabled = true;
     button.textContent = "Starting…";

@@ -46,6 +46,13 @@ jobs:
           python -m app.cli predict --limit 10
           python -m app.cli list-models
 
+      - name: Build the Netlify snapshot
+        run: |
+          python scripts/build_netlify.py
+          python -c "import json; d=json.load(open('netlify/site/demo.json')); print(len(d['runs']), 'runs,', len(d['dataset_rows']), 'rows,', len(d['models']), 'versions')"
+          test -f netlify/site/index.html
+          test -f netlify/site/demo.json
+
   docker:
     name: Docker build + health check
     runs-on: ubuntu-latest
