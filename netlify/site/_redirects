@@ -1,0 +1,2 @@
+# hash routing needs no rewrite; this only catches stray deep links
+/*  /index.html  200

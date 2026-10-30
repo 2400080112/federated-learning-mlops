@@ -72,6 +72,12 @@ async function navigate() {
 async function checkHealth() {
   const dot = $("#health-dot");
   const text = $("#health-text");
+  if (api.isDemo) {
+    const health = await api.health().catch(() => ({ version: "?" }));
+    dot.className = "dot ok";
+    text.textContent = `static snapshot · v${health.version}`;
+    return;
+  }
   try {
     const health = await api.health();
     dot.className = "dot ok";
@@ -88,6 +94,8 @@ hydrateIcons();
 // mysteriously when someone clicks "Register".
 if (api.isDemo) {
   const foot = document.querySelector(".sidebar-foot");
+  // /api/docs does not exist on a static host
+  foot?.querySelector('a[href="/api/docs"]')?.closest("div")?.remove();
   if (foot) {
     foot.insertBefore(
       el("div", { class: "demo-flag" }, "Read-only demo · static build"),
@@ -100,6 +108,6 @@ window.addEventListener("hashchange", navigate);
 if (!window.location.hash) window.location.hash = "#/dashboard";
 navigate();
 checkHealth();
-setInterval(checkHealth, 30000);
+if (!api.isDemo) setInterval(checkHealth, 30000);
 
 export { currentRoute };

@@ -227,6 +227,19 @@ function actions(run) {
     },
   }, run.is_scored ? "Re-evaluate" : "Evaluate on test split");
 
+  if (api.isDemo) {
+    return el("div", { class: "card card-pad mt-16" },
+      el("h2", {}, "Lifecycle"),
+      el("div", { class: "note warn mt-12" },
+        "This is a static snapshot: scoring, registering and promoting need the live API. " +
+        "Run the backend locally, or deploy the frontend against it (docs/DEPLOY_NETLIFY.md)."),
+      run.registered_versions?.length
+        ? el("div", { class: "small mt-12" }, "Registered as: ",
+            ...run.registered_versions.map((v) => badge(v, "staging", null)))
+        : null,
+    );
+  }
+
   return el("div", { class: "card card-pad mt-16" },
     el("div", { class: "spread" },
       el("div", {},

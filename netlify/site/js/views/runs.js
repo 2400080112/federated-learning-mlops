@@ -75,7 +75,9 @@ export async function renderRuns(root) {
       { label: "test acc", render: (r) => (r.is_scored ? pct(r.test_accuracy) : el("span", { class: "dim" }, "—")), num: true },
       { label: "test F1", render: (r) => (r.is_scored ? num(r.test_f1) : el("span", { class: "dim" }, "—")), num: true },
       { label: "created", render: (r) => el("span", { class: "dim nowrap" }, when(r.created_at)) },
-      { label: "", render: (r) => el("div", { class: "row-actions" },
+      { label: "", render: (r) => (api.isDemo
+          ? el("span", { class: "small dim nowrap" }, "read-only")
+          : el("div", { class: "row-actions" },
           el("button", {
             class: "btn btn-sm",
             disabled: r.status !== "finished",
@@ -128,7 +130,7 @@ export async function renderRuns(root) {
               }
             },
           }, "Delete"),
-        ) },
+          )) },
     ], runs, {
       onRowClick: (r) => openRunDrawer(r.id, { onChange: load }),
       empty: "No runs match this filter.",

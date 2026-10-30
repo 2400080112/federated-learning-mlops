@@ -167,6 +167,28 @@ def build(api_base: str = "") -> None:
 
     (OUT / "demo.json").write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
 
+    # netlify.toml is ignored by a drag-and-drop deploy, which is how most people
+    # publish this. The file-based equivalents (_headers, _redirects) travel with
+    # the directory, so both deploy paths behave the same.
+    (OUT / "_redirects").write_text(
+        "# hash routing needs no rewrite; this only catches stray deep links\n"
+        "/*  /index.html  200\n",
+        encoding="utf-8",
+    )
+    (OUT / "_headers").write_text(
+        "/*\n"
+        "  X-Content-Type-Options: nosniff\n"
+        "  X-Frame-Options: DENY\n"
+        "  Referrer-Policy: strict-origin-when-cross-origin\n"
+        "\n"
+        "/js/*\n"
+        "  Cache-Control: public, max-age=3600\n"
+        "\n"
+        "/demo.json\n"
+        "  Cache-Control: public, max-age=300\n",
+        encoding="utf-8",
+    )
+
     size = (OUT / "demo.json").stat().st_size / 1024
     print(f"\nwrote {OUT}")
     print(f"  demo.json  {size:.0f} KB  ({len(payload['runs'])} runs, "
