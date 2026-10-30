@@ -33,11 +33,18 @@ jobs:
       - name: Smoke the CLI end to end
         working-directory: backend
         run: |
+          set -euo pipefail
           python -m app.cli train --clients 4 --rounds 3 --name ci-smoke
           RID=$(python -m app.cli list-runs --limit 1 | tail -1 | awk '{print $1}')
           python -m app.cli evaluate --run "$RID"
-          python -m app.cli register --run "$RID"
+          REG=$(python -m app.cli register --run "$RID")
+          echo "$REG"
+          VID=$(echo "$REG" | sed -n 's/.*--version-id \([0-9][0-9]*\).*/\1/p')
+          # predict reads the production version, so promote before serving --
+          # without this the step exits 2 with "no version in production"
+          python -m app.cli promote --version-id "$VID" --min-accuracy 0.5
           python -m app.cli predict --limit 10
+          python -m app.cli list-models
 
   docker:
     name: Docker build + health check
